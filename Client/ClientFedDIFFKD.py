@@ -1,19 +1,19 @@
-import numpy as np
-import torch
-import scipy
-from torch.utils.data import Dataset
-import torch
-import copy
-import torch.nn as nn
-from sklearn.cluster import KMeans
-import torch.optim as optim
-import torch.nn.functional as f
-from utils import Accuracy, soft_predict
-from Client.ClientBase import Client
-import gc
+import   进口 numpy as np
+import   进口 torch
+import   进口 scipy
+from   从 torch.utils.data import   进口 Dataset
+import   进口 torch
+import   进口 copy
+import   进口 torch.nn as nn
+from   从 sklearn.cluster import   进口 KMeans
+import   进口 torch.optim as optim
+import   进口 torch.nn.functional as f
+from   从 utils import   进口 Accuracy, soft_predict
+from   从 Client.ClientBase import   进口 Client
+import   进口 gc
+ 
 
-
-class ClientFedDIFFKD(Client):
+class   类 ClientFedDIFFKD(Client):
     """
     This class is for train the local model with input global model(copied) and output the updated weight
     args: argument
@@ -26,41 +26,41 @@ class ClientFedDIFFKD(Client):
     def __init__(self, args, model, Loader_train, loader_test, idx, logger, code_length, num_classes, device):
         super().__init__(args, model, Loader_train, loader_test, idx, logger, code_length, num_classes, device)
 
-    def update_weights(self, global_round):
-        self.model.to(self.device)
-        self.model.train()
+    def update_weights(self, global_round):Def update_weights(self, global_round)：
+        self.model.to   来(self.device)
+        self.model.train   火车()
         epoch_loss = []
         optimizer = optim.Adam(self.model.parameters(), lr=self.args.lr)
         scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=self.args.lr_sh_rate, gamma=0.5)
-        for iter in range(self.args.local_ep):
+        for   为 iter in   在 range(self.args.local_ep):
             batch_loss = []
-            for batch_idx, (X, y) in enumerate(self.trainloader):
-                X = X.to(self.device)
-                y = y.to(self.device)
+            for   为 batch_idx, (X, y) in   在 enumerate(self.trainloader):
+                X = X.to   来(self.device)
+                y = y.to   来(self.device)
                 optimizer.zero_grad()
                 _, p = self.model(X)
                 loss = self.ce(p, y)
                 loss.backward()
-                if self.args.clip_grad != None:
-                    nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.args.clip_grad)
+                if   如果 self.args.clip_grad != None   没有一个:
+                    nn.utils   跑龙套.clip_grad_norm_(self.model.parameters(), max_norm=self.args.clip_grad)
                 optimizer.step()
-                if batch_idx % 10 == 0:
+                if   如果 batch_idx % 10 == 0:
                     print(
                         '| Global Round : {} | Client: {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                             global_round, self.idx, iter, batch_idx * len(X),
-                            len(self.trainloader.dataset),
+                            len(self.trainloader.dataset   数据集),
                                                           100. * batch_idx / len(self.trainloader), loss.item()))
-                self.logger.add_scalar('loss', loss.item())
+                self.logger   日志记录器.add_scalar('loss', loss.item())
                 batch_loss.append(loss.item())
             epoch_loss.append(sum(batch_loss) / len(batch_loss))
 
         return self.model.state_dict(), sum(epoch_loss) / len(epoch_loss)
 
 
-    def update_weights_DIFFKD(self, global_features, global_soft_prediction, lam, gamma, lam3, temp, global_round):
-        self.model.to(self.device)
-        self.model.train()
-        self.teacher_model.to(self.device)
+    def update_weights_DIFFKD(self, global_features, global_soft_prediction, lam, gamma, lam3, temp, global_round)：def update_weights_DIFFKD(self, global_features, global_soft_prediction, lam, gamma, lam3, temp, global_round):
+        self.model.to   来(self.device)
+        self.model.train   火车()
+        self.teacher_model.to   来(self.device)
         self.teacher_model.eval()
         epoch_loss = []
         epoch_loss3 = []
