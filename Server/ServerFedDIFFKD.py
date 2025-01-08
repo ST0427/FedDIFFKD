@@ -1,39 +1,39 @@
-import wandb
-from torch.utils.data import Dataset
-import torch
-import copy
-from utils import Accuracy
-from Server.ServerBase import Server
-from Client.ClientFedDIFFKD import ClientFedDIFFKD
-from tqdm import tqdm
-import numpy as np
-from utils import average_weights
-from mem_utils import MemReporter
-import time
-from sampling import LocalDataset, LocalDataloaders, partition_data
-import gc
+import   进口 wandb
+from   从 torch.utils.data 从torch.utils.data导入数据集import Dataset
+import   进口 torch   进口火炬
+import   进口 copy   进口复制
+from   从 utils import   进口 Accuracy
+from   从 Server.ServerBase import   进口 Server
+from   从 Client.ClientFedDIFFKD import   进口 ClientFedDIFFKD
+from   从 tqdm import   进口 tqdm
+import   进口 numpy    导入numpy为npas np
+from   从 utils import   进口 average_weights
+from   从 mem_utils import   进口 MemReporter
+import   进口 time
+from   从 sampling import   进口 LocalDataset, LocalDataloaders, partition_data
+import   进口 gc   进口gc
+ 
 
-
-class ServerFedDIFFKD(Server):
+class   类 ServerFedDIFFKD(Server):
     def __init__(self, args, global_model, Loader_train, Loaders_local_test, Loader_global_test, logger, device):
-        super().__init__(args, global_model, Loader_train, Loaders_local_test, Loader_global_test, logger, device)
+        super   超级().__init__(args, global_model, Loader_train, Loaders_local_test, Loader_global_test, logger, device)
 
 
     def Create_Clints(self):
-        for idx in range(self.args.num_clients):
-            self.LocalModels.append(
-                ClientFedDIFFKD(self.args, copy.deepcopy(self.global_model), self.Loaders_train[idx],
-                                self.Loaders_local_test[idx], idx=idx, logger=self.logger,
-                                code_length=self.args.code_len, num_classes=self.args.num_classes,
-                                device=self.device))
+        for   为 idx in   在 range   范围(self.args   arg游戏.num_clients):
+            self.LocalModels.append   附加(
+                ClientFedDIFFKD(self.args   arg游戏, copy.deepcopy(self.global_model), self.Loaders_train[idx],
+                                self.Loaders_local_test[idx], idx=idx, logger=self.logger   日志记录器,
+                                code_length=self.args   arg游戏.code_len, num_classes=self.args   arg游戏.num_classes,
+                                device=self.device   设备))
 
     def add_to_global(self, global_dict, local_dict, total_samples, local_features_items, v=0.1):
 
-        label_rations = {label: len(features) / total_samples for label, features in local_features_items}
+        label_rations = {label: len(features) / total_samples for   为 label, features in   在 local_features_items}
 
-        for label, features_or_predictons in local_dict.items():
+        for   为 label, features_or_predictons in   在 local_dict.items():
 
-            if label_rations[label] > v:
+            if   如果 label_rations[label] > v:
 
                 if label not in global_dict:
                     global_dict[label] = features_or_predictons
